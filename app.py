@@ -129,11 +129,11 @@ monthly_amount = st.number_input(
 #     "🖼️ รูปภาพโน้ตบุ๊ค (JPG/PNG)", type=["jpg", "png"])
 
 # ราคาขายตามระดับดาวน์
-if down_payment >= 5000:
+if down_payment >= 4000:
     total_price = 16000
-elif down_payment >= 4500:
-    total_price = 16500
 elif down_payment >= 3000:
+    total_price = 16500
+elif down_payment >= 2500:
     total_price = 17000
 else:
     total_price = 17500
