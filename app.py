@@ -84,13 +84,28 @@ def export_to_pdf(total_price, down_payment, table_df, buyer_name, image_path):
 # ---------- Streamlit UI ----------
 st.set_page_config(page_title="สัญญาผ่อน", page_icon="💻")
 st.title("📄 สัญญาผ่อน Asus ROG Zephyrus G15")
+# --- แสดงภาพทั้งหมดจากโฟลเดอร์ images ---
+image_dir = "images"
+
+if not os.path.exists(image_dir):
+    st.warning("❗ ไม่พบโฟลเดอร์ 'images' กรุณาสร้างไว้ในโปรเจกต์เดียวกับ app.py")
+else:
+    image_files = [f for f in os.listdir(
+        image_dir) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
+
+    st.header("📷 รูปภาพเครื่อง (จากโฟลเดอร์ images/)")
+
+    for img_file in image_files:
+        img_path = os.path.join(image_dir, img_file)
+        st.image(img_path, caption=img_file, use_container_width=True)
+
 
 # UI inputs
 buyer_name = st.text_input("👤 ชื่อผู้ซื้อ")
 down_payment = st.number_input(
     "💵 เงินดาวน์ (บาท)", min_value=0, max_value=16000, step=500, value=1500)
-image_path = st.file_uploader(
-    "🖼️ รูปภาพโน้ตบุ๊ค (JPG/PNG)", type=["jpg", "png"])
+# image_path = st.file_uploader(
+#     "🖼️ รูปภาพโน้ตบุ๊ค (JPG/PNG)", type=["jpg", "png"])
 
 # ราคาขายตามระดับดาวน์
 if down_payment >= 5000:
