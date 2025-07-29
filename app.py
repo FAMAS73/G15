@@ -164,3 +164,84 @@ if st.button("📤 สร้างสัญญา PDF"):
             total_price, down_payment, df, buyer_name, temp_image_path)
         with open(file_path, "rb") as f:
             st.download_button("📥 ดาวน์โหลดสัญญา PDF", f, file_name=file_path)
+
+# -------- ฟังก์ชันเสริม: ผ่อนยืดหยุ่น เติมงวดสุดท้าย --------
+
+
+def get_flexible_installments_auto_fill(total_price, down_payment, payments):
+    remaining = total_price - down_payment
+    total_paid = sum(payments)
+    if total_paid < remaining:
+        payments[-1] += remaining - total_paid  # เติมยอดสุดท้าย
+        total_paid = sum(payments)
+    rem_balance = []
+    due_dates = []
+    paid = 0
+    today = datetime.today()
+    for i, pay in enumerate(payments):
+        paid += pay
+        rem = max(0, remaining - paid)
+        rem_balance.append(rem)
+        month = (today.month + i) % 12 or 12
+        year = today.year + ((today.month + i - 1) // 12)
+        month_name = calendar.month_name[month]
+        due_dates.append(f"{month_name} {year}")
+    df = pd.DataFrame({
+        "งวดที่": [f"{i+1}" for i in range(len(payments))],
+        "เดือน": due_dates,
+        "ชำระจริง (บาท)": payments,
+        "ยอดคงเหลือหลังงวด": rem_balance
+    })
+    return df, payments, total_paid
+
+# -------- Section: ผ่อนแบบยืดหยุ่น --------
+st.markdown("## 🧮 ผ่อนแบบยืดหยุ่น (กรอกยอดเอง)")
+
+# สร้าง/อัปเดต session state
+if "num_months_flex" not in st.session_state:
+    st.session_state.num_months_flex = 6
+if "flex_payments" not in st.session_state:
+    st.session_state.flex_payments = [1500] * st.session_state.num_months_flex
+
+# ปุ่มควบคุมงวด
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("➕ เพิ่มงวด"):
+        st.session_state.num_months_flex += 1
+        st.session_state.flex_payments.append(1500)
+with col2:
+    if st.button("➖ ลดงวด", disabled=st.session_state.num_months_flex <= 1):
+        st.session_state.num_months_flex -= 1
+        st.session_state.flex_payments = st.session_state.flex_payments[
+            :st.session_state.num_months_flex]
+with col3:
+    if st.button("🔁 ล้างยอด"):
+        st.session_state.flex_payments = [
+            1500] * st.session_state.num_months_flex
+
+# ช่องกรอกยอดรายเดือน
+flex_inputs = []
+for i in range(st.session_state.num_months_flex):
+    val = st.number_input(
+        f"ยอดผ่อนงวดที่ {i+1}", min_value=1500, value=st.session_state.flex_payments[i],
+        step=100, key=f"flex_input_{i}"
+    )
+    flex_inputs.append(val)
+st.session_state.flex_payments = flex_inputs
+
+# คำนวณและแสดงตาราง
+df_flex, updated_payments, total_paid = get_flexible_installments_auto_fill(
+    total_price, down_payment, st.session_state.flex_payments
+)
+
+st.markdown("### 📊 ตารางผ่อนแบบยืดหยุ่น")
+st.dataframe(df_flex, use_container_width=True)
+
+required = total_price - down_payment
+if total_paid < required:
+    st.info(
+        f"💡 ระบบเติมยอดในงวดสุดท้ายให้อัตโนมัติ รวมจ่าย: {total_paid:,} บาท")
+elif total_paid == required:
+    st.success("✅ ยอดรวมครบพอดีแล้ว")
+else:
+    st.warning(f"⚠️ จ่ายเกิน {total_paid - required:,} บาท")
