@@ -65,26 +65,34 @@ export default function LaptopContract() {
     setInstallments(newInstallments);
   }, [totalPrice, downPayment, monthlyAmount]);
 
-  // Calculate flexible installments
+  // Calculate flexible installments (matching original Streamlit logic)
   const calculateFlexibleInstallments = () => {
     const remaining = totalPrice - downPayment;
     const totalPaid = flexPayments.reduce((sum, payment) => sum + payment, 0);
     
-    // Auto-fill last payment if needed
+    // Auto-fill last payment if needed (matching original logic)
     const adjustedPayments = [...flexPayments];
     if (totalPaid < remaining) {
       adjustedPayments[adjustedPayments.length - 1] += remaining - totalPaid;
     }
 
+    let paid = 0;
+    const today = new Date();
+
     return adjustedPayments.map((payment, index) => {
-      const paid = adjustedPayments.slice(0, index + 1).reduce((sum, p) => sum + p, 0);
-      const dueDate = addMonths(new Date(), index + 1);
+      paid += payment;
+      const rem = Math.max(0, remaining - paid);
+      
+      // Match original month calculation logic exactly
+      const month = (today.getMonth() + index) % 12 || 12;
+      const year = today.getFullYear() + Math.floor((today.getMonth() + index - 1) / 12);
+      const dueDate = new Date(year, month - 1, 1);
       
       return {
         period: `${index + 1}`,
         dueMonth: format(dueDate, 'MMMM yyyy', { locale: th }),
         amount: payment,
-        remaining: Math.max(0, remaining - paid)
+        remaining: rem
       };
     });
   };
