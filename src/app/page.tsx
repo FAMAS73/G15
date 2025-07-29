@@ -77,16 +77,13 @@ export default function LaptopContract() {
     }
 
     let paid = 0;
-    const today = new Date();
 
     return adjustedPayments.map((payment, index) => {
       paid += payment;
       const rem = Math.max(0, remaining - paid);
       
-      // Match original month calculation logic exactly
-      const month = (today.getMonth() + index) % 12 || 12;
-      const year = today.getFullYear() + Math.floor((today.getMonth() + index - 1) / 12);
-      const dueDate = new Date(year, month - 1, 1);
+      // Use same logic as regular installments - start from next month
+      const dueDate = addMonths(new Date(), index + 1);
       
       return {
         period: `${index + 1}`,
