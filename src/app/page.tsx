@@ -170,16 +170,16 @@ export default function LaptopContract() {
   const flexInstallments = calculateFlexibleInstallments();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+        <h1 className="text-4xl font-bold text-center mb-8 text-indigo-900 drop-shadow-sm">
           📄 สัญญาผ่อน Asus ROG Zephyrus G15
         </h1>
 
         {/* Laptop Specifications */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">🔧 สเปกเครื่อง</h2>
-          <ul className="space-y-2 text-gray-600">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">🔧 สเปกเครื่อง</h2>
+          <ul className="space-y-3 text-gray-700">
             <li>• CPU: Intel Core i7-9750H</li>
             <li>• GPU: NVIDIA RTX 2070 Max-Q</li>
             <li>• RAM: 16GB</li>
@@ -191,9 +191,9 @@ export default function LaptopContract() {
         </div>
 
         {/* Image Gallery */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">📷 รูปภาพเครื่อง</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">📷 รูปภาพเครื่อง</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               '20250519_195825.jpg',
               '20250519_195832.jpg',
@@ -219,8 +219,8 @@ export default function LaptopContract() {
         </div>
 
         {/* Contract Form */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">📝 ข้อมูลสัญญา</h2>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">📝 ข้อมูลสัญญา</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div>
@@ -286,22 +286,22 @@ export default function LaptopContract() {
 
           {/* Payment Schedule Table */}
           <div className="overflow-x-auto mb-6">
-            <table className="w-full border-collapse border border-gray-300">
+            <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2">งวดที่</th>
-                  <th className="border border-gray-300 px-4 py-2">ครบกำหนดเดือน</th>
-                  <th className="border border-gray-300 px-4 py-2">ยอดชำระ (บาท)</th>
-                  <th className="border border-gray-300 px-4 py-2">ยอดที่เหลือหลังชำระ</th>
+                <tr className="bg-indigo-100">
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">งวดที่</th>
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">ครบกำหนดเดือน</th>
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">ยอดชำระ (บาท)</th>
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">ยอดที่เหลือหลังชำระ</th>
                 </tr>
               </thead>
               <tbody>
                 {installments.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-2 text-center">{row.period}</td>
-                    <td className="border border-gray-300 px-4 py-2">{row.dueMonth}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">{row.amount.toLocaleString()}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">{row.remaining.toLocaleString()}</td>
+                  <tr key={index} className="hover:bg-blue-50 transition-colors">
+                    <td className="border border-gray-300 px-4 py-3 text-center text-gray-800 font-medium">{row.period}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-gray-700">{row.dueMonth}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-right text-gray-800 font-medium">{row.amount.toLocaleString()}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-right text-gray-700">{row.remaining.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -317,8 +317,8 @@ export default function LaptopContract() {
         </div>
 
         {/* Flexible Payment Section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">🧮 ผ่อนแบบยืดหยุ่น (กรอกยอดเอง)</h2>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">🧮 ผ่อนแบบยืดหยุ่น (กรอกยอดเอง)</h2>
           
           <div className="flex gap-4 mb-4">
             <button
@@ -361,22 +361,22 @@ export default function LaptopContract() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
+            <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2">งวดที่</th>
-                  <th className="border border-gray-300 px-4 py-2">เดือน</th>
-                  <th className="border border-gray-300 px-4 py-2">ชำระจริง (บาท)</th>
-                  <th className="border border-gray-300 px-4 py-2">ยอดคงเหลือหลังงวด</th>
+                <tr className="bg-indigo-100">
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">งวดที่</th>
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">เดือน</th>
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">ชำระจริง (บาท)</th>
+                  <th className="border border-gray-300 px-4 py-3 text-indigo-800 font-semibold">ยอดคงเหลือหลังงวด</th>
                 </tr>
               </thead>
               <tbody>
                 {flexInstallments.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-2 text-center">{row.period}</td>
-                    <td className="border border-gray-300 px-4 py-2">{row.dueMonth}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">{row.amount.toLocaleString()}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">{row.remaining.toLocaleString()}</td>
+                  <tr key={index} className="hover:bg-blue-50 transition-colors">
+                    <td className="border border-gray-300 px-4 py-3 text-center text-gray-800 font-medium">{row.period}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-gray-700">{row.dueMonth}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-right text-gray-800 font-medium">{row.amount.toLocaleString()}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-right text-gray-700">{row.remaining.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
