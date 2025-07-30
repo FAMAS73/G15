@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { format, addMonths } from 'date-fns';
 import { th } from 'date-fns/locale';
 import jsPDF from 'jspdf';
+import { loadThaiFont } from '../utils/fontUtils';
 
 interface InstallmentRow {
   period: string;
@@ -94,58 +95,78 @@ export default function LaptopContract() {
     });
   };
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     if (!buyerName.trim()) {
       alert('กรุณากรอกชื่อผู้ซื้อ');
       return;
     }
 
-    const pdf = new jsPDF();
-    
-    // Add Thai font support (simplified - in production you'd load the actual font)
-    pdf.setFont('helvetica');
-    pdf.setFontSize(16);
-    
-    // Title
-    pdf.text('สัญญาผ่อนโน้ตบุ๊ค (ฉบับกันเอง)', 105, 20, { align: 'center' });
-    
-    // Contract details
-    pdf.setFontSize(12);
-    pdf.text(`ชื่อผู้ซื้อ: ${buyerName}`, 20, 40);
-    pdf.text(`ราคาขายรวม: ${totalPrice.toLocaleString()} บาท`, 20, 50);
-    pdf.text(`เงินดาวน์: ${downPayment.toLocaleString()} บาท`, 20, 60);
-    pdf.text(`ยอดที่ต้องผ่อน: ${(totalPrice - downPayment).toLocaleString()} บาท`, 20, 70);
-    
-    // Terms and conditions
-    const terms = [
-      'เงื่อนไข:',
-      '1. ผู้ซื้อสามารถผ่อนชำระยอดที่เหลือแบบไม่มีดอกเบี้ย',
-      '2. งวดผ่อนจะเริ่มตั้งแต่เดือนถัดจากวันทำสัญญา',
-      '3. หากผิดนัดเกิน 2 งวดโดยไม่แจ้ง จะถือว่าผิดเงื่อนไข',
-      '4. ห้ามขาย/จำนำ/โอนเครื่องจนกว่าจะผ่อนครบ',
-      '5. ถ้ามีปัญหาติดต่อพูดคุยกันได้',
-      '',
-      'ตารางการชำระ:'
-    ];
-    
-    let yPos = 90;
-    terms.forEach(term => {
-      pdf.text(term, 20, yPos);
-      yPos += 8;
-    });
-    
-    // Payment schedule
-    installments.forEach((row) => {
-      pdf.text(`งวดที่ ${row.period}: ${row.dueMonth} - ${row.amount.toLocaleString()} บาท`, 20, yPos);
-      yPos += 8;
-    });
-    
-    // Signature lines
-    yPos += 20;
-    pdf.text('_____________________     _____________________', 20, yPos);
-    pdf.text('      ผู้ขายเซ็นชื่อ                             ผู้ซื้อเซ็นชื่อ', 20, yPos + 10);
-    
-    pdf.save('contract_export.pdf');
+    try {
+      const pdf = new jsPDF();
+      
+      // Load Thai Sarabun font
+      const fontData = await loadThaiFont();
+      if (fontData) {
+        pdf.addFileToVFS('THSarabunNew.ttf', fontData);
+        pdf.addFont('THSarabunNew.ttf', 'THSarabunNew', 'normal');
+        pdf.setFont('THSarabunNew');
+      } else {
+        // Fallback to helvetica if font loading fails
+        pdf.setFont('helvetica');
+      }
+      
+      pdf.setFontSize(18);
+      
+      // Title in Thai
+      pdf.text('สัญญาผ่อนโน้ตบุ๊ค (ฉบับกันเอง)', 105, 20, { align: 'center' });
+      pdf.text('Asus ROG Zephyrus G15', 105, 30, { align: 'center' });
+      
+      // Contract details in Thai
+      pdf.setFontSize(14);
+      pdf.text(`ชื่อผู้ซื้อ: ${buyerName}`, 20, 50);
+      pdf.text(`ราคาขายรวม: ${totalPrice.toLocaleString()} บาท`, 20, 60);
+      pdf.text(`เงินดาวน์: ${downPayment.toLocaleString()} บาท`, 20, 70);
+      pdf.text(`ยอดที่ต้องผ่อน: ${(totalPrice - downPayment).toLocaleString()} บาท`, 20, 80);
+      
+      // Terms and conditions in Thai
+      const terms = [
+        'เงื่อนไข:',
+        '1. ผู้ซื้อสามารถผ่อนชำระยอดที่เหลือแบบไม่มีดอกเบี้ย',
+        '2. งวดผ่อนจะเริ่มตั้งแต่เดือนถัดจากวันทำสัญญา',
+        '3. หากผิดนัดเกิน 2 งวดโดยไม่แจ้ง จะถือว่าผิดเงื่อนไข',
+        '4. ห้ามขาย/จำนำ/โอนเครื่องจนกว่าจะผ่อนครบ',
+        '5. ถ้ามีปัญหาติดต่อพูดคุยกันได้',
+        '',
+        'ตารางการชำระ:'
+      ];
+      
+      let yPos = 100;
+      terms.forEach(term => {
+        pdf.text(term, 20, yPos);
+        yPos += 10;
+      });
+      
+      // Payment schedule in Thai
+      installments.forEach((row) => {
+        pdf.text(`งวดที่ ${row.period}: ${row.dueMonth} - ${row.amount.toLocaleString()} บาท`, 20, yPos);
+        yPos += 10;
+      });
+      
+      // Signature lines in Thai
+      yPos += 20;
+      pdf.text('_____________________     _____________________', 20, yPos);
+      pdf.text('      ผู้ขายเซ็นชื่อ                             ผู้ซื้อเซ็นชื่อ', 20, yPos + 15);
+      
+      // Add date in Thai
+      const today = new Date();
+      const thaiDate = format(today, 'dd MMMM yyyy', { locale: th });
+      pdf.text(`วันที่: ${thaiDate}`, 20, yPos + 35);
+      
+      pdf.save('สัญญาผ่อนโน้ตบุ๊ค.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('เกิดข้อผิดพลาดในการสร้าง PDF');
+    }
   };
 
   const addFlexPayment = () => {
