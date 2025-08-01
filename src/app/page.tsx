@@ -12,6 +12,12 @@ interface InstallmentRow {
   dueMonth: string;
   amount: number;
   remaining: number;
+  isPaid?: boolean;
+}
+
+interface FlexibleInstallmentRow extends InstallmentRow {
+  dueDate: string; // วันที่ครบกำหนดแบบละเอียด
+  isFirstHalf: boolean; // true = ต้นเดือน, false = กลางเดือน
 }
 
 export default function LaptopContract() {
@@ -23,6 +29,12 @@ export default function LaptopContract() {
   const [flexPayments, setFlexPayments] = useState<number[]>([1500, 1500, 1500, 1500, 1500, 1500]);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // New states for enhanced flexible payment
+  const [flexTotalPrice, setFlexTotalPrice] = useState(17500);
+  const [flexDownPayment, setFlexDownPayment] = useState(1500);
+  const [regularPaymentStatus, setRegularPaymentStatus] = useState<boolean[]>([]);
+  const [flexPaymentStatus, setFlexPaymentStatus] = useState<boolean[]>([]);
 
   // Safe number input handler
   const handleSafeNumberInput = (
@@ -283,14 +295,14 @@ export default function LaptopContract() {
     }
   };
 
-  // Safe flexible installments calculation
+  // Safe flexible installments calculation using flexible price settings
   const calculateFlexibleInstallments = () => {
     try {
-      if (!totalPrice || downPayment < 0 || totalPrice <= 0) {
+      if (!flexTotalPrice || flexDownPayment < 0 || flexTotalPrice <= 0) {
         return [];
       }
 
-      const remaining = totalPrice - downPayment;
+      const remaining = flexTotalPrice - flexDownPayment;
       if (remaining <= 0) {
         return [];
       }
@@ -299,7 +311,7 @@ export default function LaptopContract() {
         return sum + (isNaN(payment) ? 0 : payment);
       }, 0);
       
-      // Auto-fill last payment if needed (matching original logic)
+      // Auto-fill last payment if needed - ensure total matches remaining amount
       const adjustedPayments = [...flexPayments];
       if (totalPaid < remaining && adjustedPayments.length > 0) {
         adjustedPayments[adjustedPayments.length - 1] += remaining - totalPaid;
@@ -568,8 +580,88 @@ export default function LaptopContract() {
 
         {/* Flexible Payment Section */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">🧮 ผ่อนแบบยืดหยุ่น (กรอกยอดเอง)</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">🧮 ผ่อนแบบยืดหยุ่น (กำหนดราคาและงวดเอง)</h2>
           
+          {/* Flexible Price Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
+            <div>
+              <label className="block text-sm font-medium text-orange-800 mb-2">
+                💰 ราคาขายรวม (Flexible)
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFlexTotalPrice(Math.max(10000, flexTotalPrice - 100))}
+                  className="bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 active:bg-red-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➖
+                </button>
+                <input
+                  type="text"
+                  value={flexTotalPrice.toLocaleString()}
+                  readOnly
+                  className="flex-1 px-3 py-3 border rounded-md text-center text-gray-900 bg-gray-50 font-semibold text-lg border-orange-300"
+                />
+                <button
+                  onClick={() => setFlexTotalPrice(Math.min(30000, flexTotalPrice + 100))}
+                  className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➕
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-orange-800 mb-2">
+                💵 เงินดาวน์ (Flexible)
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFlexDownPayment(Math.max(0, flexDownPayment - 100))}
+                  className="bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 active:bg-red-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➖
+                </button>
+                <input
+                  type="text"
+                  value={flexDownPayment.toLocaleString()}
+                  readOnly
+                  className="flex-1 px-3 py-3 border rounded-md text-center text-gray-900 bg-gray-50 font-semibold text-lg border-orange-300"
+                />
+                <button
+                  onClick={() => setFlexDownPayment(Math.min(flexTotalPrice, flexDownPayment + 100))}
+                  className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➕
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Flexible Discount Alert */}
+          {(() => {
+            const discount = 17500 - flexTotalPrice;
+            if (discount > 0) {
+              return (
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-lg mb-6 text-center">
+                  <div className="text-xl font-bold">🎉 ส่วนลดพิเศษ! ลดราคา {discount.toLocaleString()} บาท</div>
+                  <div className="text-sm mt-1">จากราคาเต็ม 17,500 บาท เหลือ {flexTotalPrice.toLocaleString()} บาท</div>
+                </div>
+              );
+            } else if (discount < 0) {
+              return (
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-lg mb-6 text-center">
+                  <div className="text-xl font-bold">💎 ราคาพิเศษ! เพิ่มขึ้น {Math.abs(discount).toLocaleString()} บาท</div>
+                  <div className="text-sm mt-1">จากราคาเต็ม 17,500 บาท เป็น {flexTotalPrice.toLocaleString()} บาท</div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <button
               onClick={addFlexPayment}
@@ -660,13 +752,13 @@ export default function LaptopContract() {
 
           {(() => {
             const totalPaid = flexPayments.reduce((sum, payment) => sum + payment, 0);
-            const required = totalPrice - downPayment;
+            const required = flexTotalPrice - flexDownPayment;
             
             if (totalPaid < required) {
               return (
                 <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                   <p className="text-blue-800">
-                    💡 ระบบเติมยอดในงวดสุดท้ายให้อัตโนมัติ รวมจ่าย: {totalPaid.toLocaleString()} บาท
+                    💡 ระบบเติมยอดในงวดสุดท้ายให้อัตโนมัติ รวมจ่าย: {totalPaid.toLocaleString()} บาท ต้องการ: {required.toLocaleString()} บาท
                   </p>
                 </div>
               );
