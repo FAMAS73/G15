@@ -111,10 +111,10 @@ export default function LaptopContract() {
   // Calculate installments (with comprehensive safety checks)
   useEffect(() => {
     try {
-      // Safety checks to prevent errors
-      if (!totalPrice || !downPayment || !monthlyAmount || 
-          totalPrice <= 0 || downPayment < 0 || monthlyAmount <= 0 ||
-          downPayment >= totalPrice) {
+      // Safety checks to prevent errors - allow downPayment to be 0
+      if (!totalPrice || downPayment < 0 || !monthlyAmount || 
+          totalPrice <= 0 || monthlyAmount <= 0 ||
+          downPayment > totalPrice) {
         setInstallments([]);
         return;
       }
@@ -286,7 +286,7 @@ export default function LaptopContract() {
   // Safe flexible installments calculation
   const calculateFlexibleInstallments = () => {
     try {
-      if (!totalPrice || !downPayment || totalPrice <= 0 || downPayment < 0) {
+      if (!totalPrice || downPayment < 0 || totalPrice <= 0) {
         return [];
       }
 
@@ -532,23 +532,26 @@ export default function LaptopContract() {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
           <h2 className="text-2xl font-semibold mb-4 text-indigo-800 border-b border-indigo-200 pb-2">🧮 ผ่อนแบบยืดหยุ่น (กรอกยอดเอง)</h2>
           
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <button
               onClick={addFlexPayment}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+              className="flex-1 bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors font-semibold text-lg shadow-md touch-manipulation"
+              style={{ minHeight: '48px', minWidth: '48px' }}
             >
               ➕ เพิ่มงวด
             </button>
             <button
               onClick={removeFlexPayment}
               disabled={flexPayments.length <= 1}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors disabled:bg-gray-400"
+              className="flex-1 bg-red-600 text-white px-6 py-4 rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold text-lg shadow-md touch-manipulation"
+              style={{ minHeight: '48px', minWidth: '48px' }}
             >
               ➖ ลดงวด
             </button>
             <button
               onClick={() => setFlexPayments(Array(flexPayments.length).fill(1500))}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+              className="flex-1 bg-gray-600 text-white px-6 py-4 rounded-lg hover:bg-gray-700 active:bg-gray-800 transition-colors font-semibold text-lg shadow-md touch-manipulation"
+              style={{ minHeight: '48px', minWidth: '48px' }}
             >
               🔁 ล้างยอด
             </button>
