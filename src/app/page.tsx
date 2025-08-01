@@ -427,7 +427,7 @@ export default function LaptopContract() {
               </label>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setDownPayment(Math.max(0, downPayment - 500))}
+                  onClick={() => setDownPayment(Math.max(0, downPayment - 100))}
                   className="bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 active:bg-red-700 font-bold text-lg shadow-md touch-manipulation"
                   style={{ minHeight: '48px', minWidth: '48px' }}
                 >
@@ -442,7 +442,7 @@ export default function LaptopContract() {
                   }`}
                 />
                 <button
-                  onClick={() => setDownPayment(Math.min(20000, downPayment + 500))}
+                  onClick={() => setDownPayment(Math.min(20000, downPayment + 100))}
                   className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold text-lg shadow-md touch-manipulation"
                   style={{ minHeight: '48px', minWidth: '48px' }}
                 >
@@ -475,7 +475,7 @@ export default function LaptopContract() {
                   }`}
                 />
                 <button
-                  onClick={() => setMonthlyAmount(Math.min(50000, monthlyAmount + 100))}
+                  onClick={() => setMonthlyAmount(Math.min(17500, monthlyAmount + 100))}
                   className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold text-lg shadow-md touch-manipulation"
                   style={{ minHeight: '48px', minWidth: '48px' }}
                 >
@@ -488,11 +488,23 @@ export default function LaptopContract() {
             </div>
           </div>
 
-          {/* Special Pricing Alert */}
+          {/* Special Pricing Alert - Show all discount tiers */}
           {downPayment >= 4000 && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-lg mb-6 text-center">
               <div className="text-xl font-bold">🎉 ส่วนลดพิเศษ! ดาวน์ 4,000+ ลดเหลือ 16,000 บาท</div>
               <div className="text-sm mt-1">ประหยัดไป 1,500 บาท!</div>
+            </div>
+          )}
+          {downPayment >= 3000 && downPayment < 4000 && (
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-lg mb-6 text-center">
+              <div className="text-xl font-bold">💎 ส่วนลด! ดาวน์ 3,000+ ลดเหลือ 16,500 บาท</div>
+              <div className="text-sm mt-1">ประหยัดไป 1,000 บาท!</div>
+            </div>
+          )}
+          {downPayment >= 2500 && downPayment < 3000 && (
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-lg mb-6 text-center">
+              <div className="text-xl font-bold">⭐ ส่วนลด! ดาวน์ 2,500+ ลดเหลือ 17,000 บาท</div>
+              <div className="text-sm mt-1">ประหยัดไป 500 บาท!</div>
             </div>
           )}
 
