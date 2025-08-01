@@ -21,79 +21,151 @@ export default function LaptopContract() {
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
   const [totalPrice, setTotalPrice] = useState(17500);
   const [flexPayments, setFlexPayments] = useState<number[]>([1500, 1500, 1500, 1500, 1500, 1500]);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  // Calculate total price based on down payment
+  // Safe number input handler
+  const handleSafeNumberInput = (
+    value: string, 
+    min: number, 
+    max: number, 
+    step: number, 
+    setter: (value: number) => void,
+    fieldName: string
+  ) => {
+    try {
+      // Allow empty string for user typing
+      if (value === '') {
+        setter(min);
+        setErrors(prev => ({...prev, [fieldName]: ''}));
+        return;
+      }
+
+      const num = parseFloat(value);
+      
+      if (isNaN(num)) {
+        setErrors(prev => ({...prev, [fieldName]: 'กรุณากรอกตัวเลขเท่านั้น'}));
+        return;
+      }
+
+      if (num < min) {
+        setErrors(prev => ({...prev, [fieldName]: `ค่าต่ำสุด ${min.toLocaleString()} บาท`}));
+        setter(min);
+        return;
+      }
+
+      if (num > max) {
+        setErrors(prev => ({...prev, [fieldName]: `ค่าสูงสุด ${max.toLocaleString()} บาท`}));
+        setter(max);
+        return;
+      }
+
+      // Round to nearest step
+      const roundedValue = Math.round(num / step) * step;
+      setter(roundedValue);
+      setErrors(prev => ({...prev, [fieldName]: ''}));
+    } catch (error) {
+      console.error('Error in handleSafeNumberInput:', error);
+      setter(min);
+      setErrors(prev => ({...prev, [fieldName]: 'เกิดข้อผิดพลาด กรุณาลองใหม่'}));
+    }
+  };
+
+  // Safe buyer name handler
+  const handleBuyerNameChange = (value: string) => {
+    try {
+      if (value.length > 100) {
+        setErrors(prev => ({...prev, buyerName: 'ชื่อยาวเกินไป (สูงสุด 100 ตัวอักษร)'}));
+        return;
+      }
+      setBuyerName(value);
+      setErrors(prev => ({...prev, buyerName: ''}));
+    } catch (error) {
+      console.error('Error in handleBuyerNameChange:', error);
+    }
+  };
+
+  // Calculate total price based on down payment (with safety checks)
   useEffect(() => {
-    if (downPayment >= 4000) {
-      setTotalPrice(16000);
-    } else if (downPayment >= 3000) {
-      setTotalPrice(16500);
-    } else if (downPayment >= 2500) {
-      setTotalPrice(17000);
-    } else {
+    try {
+      if (!downPayment || downPayment < 0) {
+        setTotalPrice(17500);
+        return;
+      }
+
+      if (downPayment >= 4000) {
+        setTotalPrice(16000);
+      } else if (downPayment >= 3000) {
+        setTotalPrice(16500);
+      } else if (downPayment >= 2500) {
+        setTotalPrice(17000);
+      } else {
+        setTotalPrice(17500);
+      }
+    } catch (error) {
+      console.error('Error calculating total price:', error);
       setTotalPrice(17500);
     }
   }, [downPayment]);
 
-  // Calculate installments
+  // Calculate installments (with comprehensive safety checks)
   useEffect(() => {
-    const remaining = totalPrice - downPayment;
-    const amounts: number[] = [];
-    const remBalance: number[] = [];
-    const dueDates: string[] = [];
+    try {
+      // Safety checks to prevent errors
+      if (!totalPrice || !downPayment || !monthlyAmount || 
+          totalPrice <= 0 || downPayment < 0 || monthlyAmount <= 0 ||
+          downPayment >= totalPrice) {
+        setInstallments([]);
+        return;
+      }
 
-    let paid = 0;
-    let i = 0;
-    
-    while (paid < remaining) {
-      i++;
-      const thisMonth = (remaining - paid) > monthlyAmount ? monthlyAmount : remaining - paid;
-      paid += thisMonth;
-      amounts.push(thisMonth);
-      remBalance.push(remaining - paid);
+      const remaining = totalPrice - downPayment;
+      if (remaining <= 0) {
+        setInstallments([]);
+        return;
+      }
 
-      const dueDate = addMonths(new Date(), i);
-      dueDates.push(format(dueDate, 'MMMM yyyy', { locale: th }));
+      const amounts: number[] = [];
+      const remBalance: number[] = [];
+      const dueDates: string[] = [];
+
+      let paid = 0;
+      let i = 0;
+      const maxIterations = 100; // Prevent infinite loops
+      
+      while (paid < remaining && i < maxIterations) {
+        i++;
+        const thisMonth = (remaining - paid) > monthlyAmount ? monthlyAmount : remaining - paid;
+        
+        if (thisMonth <= 0) break; // Safety check
+        
+        paid += thisMonth;
+        amounts.push(thisMonth);
+        remBalance.push(Math.max(0, remaining - paid));
+
+        try {
+          const dueDate = addMonths(new Date(), i);
+          dueDates.push(format(dueDate, 'MMMM yyyy', { locale: th }));
+        } catch (dateError) {
+          console.error('Date formatting error:', dateError);
+          dueDates.push(`เดือนที่ ${i}`);
+        }
+      }
+
+      const newInstallments: InstallmentRow[] = amounts.map((amount, index) => ({
+        period: `${index + 1}`,
+        dueMonth: dueDates[index] || `เดือนที่ ${index + 1}`,
+        amount: amount,
+        remaining: remBalance[index] || 0
+      }));
+
+      setInstallments(newInstallments);
+    } catch (error) {
+      console.error('Error calculating installments:', error);
+      setInstallments([]);
     }
-
-    const newInstallments: InstallmentRow[] = amounts.map((amount, index) => ({
-      period: `${index + 1}`,
-      dueMonth: dueDates[index],
-      amount: amount,
-      remaining: remBalance[index]
-    }));
-
-    setInstallments(newInstallments);
   }, [totalPrice, downPayment, monthlyAmount]);
 
-  // Calculate flexible installments (matching original Streamlit logic)
-  const calculateFlexibleInstallments = () => {
-    const remaining = totalPrice - downPayment;
-    const totalPaid = flexPayments.reduce((sum, payment) => sum + payment, 0);
-    
-    // Auto-fill last payment if needed (matching original logic)
-    const adjustedPayments = [...flexPayments];
-    if (totalPaid < remaining) {
-      adjustedPayments[adjustedPayments.length - 1] += remaining - totalPaid;
-    }
-
-    let paid = 0;
-
-    return adjustedPayments.map((payment, index) => {
-      paid += payment;
-      const rem = Math.max(0, remaining - paid);
-      
-      // Use same logic as regular installments - start from next month
-      const dueDate = addMonths(new Date(), index + 1);
-      
-      return {
-        period: `${index + 1}`,
-        dueMonth: format(dueDate, 'MMMM yyyy', { locale: th }),
-        amount: payment,
-        remaining: rem
-      };
-    });
-  };
 
   const generatePDF = async () => {
     if (!buyerName.trim()) {
@@ -179,10 +251,91 @@ export default function LaptopContract() {
     }
   };
 
-  const updateFlexPayment = (index: number, value: number) => {
-    const newPayments = [...flexPayments];
-    newPayments[index] = value;
-    setFlexPayments(newPayments);
+  // Safe flexible payment update handler
+  const updateFlexPayment = (index: number, value: string) => {
+    try {
+      const newPayments = [...flexPayments];
+      
+      if (value === '') {
+        newPayments[index] = 500; // Minimum value
+        setFlexPayments(newPayments);
+        return;
+      }
+
+      const num = parseFloat(value);
+      
+      if (isNaN(num)) {
+        return; // Don't update if invalid
+      }
+
+      if (num < 500) {
+        newPayments[index] = 500;
+      } else if (num > 50000) {
+        newPayments[index] = 50000;
+      } else {
+        // Round to nearest 100
+        newPayments[index] = Math.round(num / 100) * 100;
+      }
+      
+      setFlexPayments(newPayments);
+    } catch (error) {
+      console.error('Error updating flex payment:', error);
+    }
+  };
+
+  // Safe flexible installments calculation
+  const calculateFlexibleInstallments = () => {
+    try {
+      if (!totalPrice || !downPayment || totalPrice <= 0 || downPayment < 0) {
+        return [];
+      }
+
+      const remaining = totalPrice - downPayment;
+      if (remaining <= 0) {
+        return [];
+      }
+
+      const totalPaid = flexPayments.reduce((sum, payment) => {
+        return sum + (isNaN(payment) ? 0 : payment);
+      }, 0);
+      
+      // Auto-fill last payment if needed (matching original logic)
+      const adjustedPayments = [...flexPayments];
+      if (totalPaid < remaining && adjustedPayments.length > 0) {
+        adjustedPayments[adjustedPayments.length - 1] += remaining - totalPaid;
+      }
+
+      let paid = 0;
+
+      return adjustedPayments.map((payment, index) => {
+        const safePayment = isNaN(payment) ? 0 : payment;
+        paid += safePayment;
+        const rem = Math.max(0, remaining - paid);
+        
+        try {
+          // Use same logic as regular installments - start from next month
+          const dueDate = addMonths(new Date(), index + 1);
+          
+          return {
+            period: `${index + 1}`,
+            dueMonth: format(dueDate, 'MMMM yyyy', { locale: th }),
+            amount: safePayment,
+            remaining: rem
+          };
+        } catch (dateError) {
+          console.error('Date error in flexible installments:', dateError);
+          return {
+            period: `${index + 1}`,
+            dueMonth: `เดือนที่ ${index + 1}`,
+            amount: safePayment,
+            remaining: rem
+          };
+        }
+      });
+    } catch (error) {
+      console.error('Error calculating flexible installments:', error);
+      return [];
+    }
   };
 
   const flexInstallments = calculateFlexibleInstallments();
@@ -256,10 +409,16 @@ export default function LaptopContract() {
               <input
                 type="text"
                 value={buyerName}
-                onChange={(e) => setBuyerName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                onChange={(e) => handleBuyerNameChange(e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 bg-white ${
+                  errors.buyerName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
                 placeholder="กรอกชื่อผู้ซื้อ"
+                maxLength={100}
               />
+              {errors.buyerName && (
+                <p className="text-red-500 text-xs mt-1">{errors.buyerName}</p>
+              )}
             </div>
             
             <div>
@@ -269,12 +428,17 @@ export default function LaptopContract() {
               <input
                 type="number"
                 value={downPayment}
-                onChange={(e) => setDownPayment(Number(e.target.value))}
+                onChange={(e) => handleSafeNumberInput(e.target.value, 0, 20000, 500, setDownPayment, 'downPayment')}
                 min="0"
-                max="17500"
+                max="20000"
                 step="500"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 bg-white ${
+                  errors.downPayment ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
               />
+              {errors.downPayment && (
+                <p className="text-red-500 text-xs mt-1">{errors.downPayment}</p>
+              )}
             </div>
             
             <div>
@@ -284,11 +448,17 @@ export default function LaptopContract() {
               <input
                 type="number"
                 value={monthlyAmount}
-                onChange={(e) => setMonthlyAmount(Number(e.target.value))}
+                onChange={(e) => handleSafeNumberInput(e.target.value, 500, 50000, 100, setMonthlyAmount, 'monthlyAmount')}
                 min="500"
+                max="50000"
                 step="100"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 bg-white ${
+                  errors.monthlyAmount ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
               />
+              {errors.monthlyAmount && (
+                <p className="text-red-500 text-xs mt-1">{errors.monthlyAmount}</p>
+              )}
             </div>
           </div>
 
@@ -393,7 +563,7 @@ export default function LaptopContract() {
                 <input
                   type="number"
                   value={payment}
-                  onChange={(e) => updateFlexPayment(index, Number(e.target.value))}
+                  onChange={(e) => updateFlexPayment(index, e.target.value)}
                   min="500"
                   step="100"
                   className="w-full px-4 py-3 border-2 border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 font-medium"
