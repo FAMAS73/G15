@@ -425,17 +425,30 @@ export default function LaptopContract() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 💵 เงินดาวน์ (บาท)
               </label>
-              <input
-                type="number"
-                value={downPayment}
-                onChange={(e) => handleSafeNumberInput(e.target.value, 0, 20000, 500, setDownPayment, 'downPayment')}
-                min="0"
-                max="20000"
-                step="500"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 bg-white ${
-                  errors.downPayment ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                }`}
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setDownPayment(Math.max(0, downPayment - 500))}
+                  className="bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 active:bg-red-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➖
+                </button>
+                <input
+                  type="text"
+                  value={downPayment.toLocaleString()}
+                  readOnly
+                  className={`flex-1 px-3 py-3 border rounded-md text-center text-gray-900 bg-gray-50 font-semibold text-lg ${
+                    errors.downPayment ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                <button
+                  onClick={() => setDownPayment(Math.min(20000, downPayment + 500))}
+                  className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➕
+                </button>
+              </div>
               {errors.downPayment && (
                 <p className="text-red-500 text-xs mt-1">{errors.downPayment}</p>
               )}
@@ -445,17 +458,30 @@ export default function LaptopContract() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 💳 ยอดผ่อนต่อเดือน (บาท)
               </label>
-              <input
-                type="number"
-                value={monthlyAmount}
-                onChange={(e) => handleSafeNumberInput(e.target.value, 500, 50000, 100, setMonthlyAmount, 'monthlyAmount')}
-                min="500"
-                max="50000"
-                step="100"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 bg-white ${
-                  errors.monthlyAmount ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                }`}
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMonthlyAmount(Math.max(500, monthlyAmount - 100))}
+                  className="bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 active:bg-red-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➖
+                </button>
+                <input
+                  type="text"
+                  value={monthlyAmount.toLocaleString()}
+                  readOnly
+                  className={`flex-1 px-3 py-3 border rounded-md text-center text-gray-900 bg-gray-50 font-semibold text-lg ${
+                    errors.monthlyAmount ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                <button
+                  onClick={() => setMonthlyAmount(Math.min(50000, monthlyAmount + 100))}
+                  className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold text-lg shadow-md touch-manipulation"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  ➕
+                </button>
+              </div>
               {errors.monthlyAmount && (
                 <p className="text-red-500 text-xs mt-1">{errors.monthlyAmount}</p>
               )}
@@ -563,14 +589,36 @@ export default function LaptopContract() {
                 <label className="block text-sm font-semibold text-indigo-800 mb-2">
                   💰 ยอดผ่อนงวดที่ {index + 1}
                 </label>
-                <input
-                  type="number"
-                  value={payment}
-                  onChange={(e) => updateFlexPayment(index, e.target.value)}
-                  min="500"
-                  step="100"
-                  className="w-full px-4 py-3 border-2 border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 font-medium"
-                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const newPayments = [...flexPayments];
+                      newPayments[index] = Math.max(500, payment - 100);
+                      setFlexPayments(newPayments);
+                    }}
+                    className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 active:bg-red-700 font-bold shadow-md touch-manipulation"
+                    style={{ minHeight: '40px', minWidth: '40px' }}
+                  >
+                    ➖
+                  </button>
+                  <input
+                    type="text"
+                    value={payment.toLocaleString()}
+                    readOnly
+                    className="flex-1 px-3 py-2 border-2 border-indigo-300 rounded-lg text-center text-gray-800 bg-gray-50 font-semibold"
+                  />
+                  <button
+                    onClick={() => {
+                      const newPayments = [...flexPayments];
+                      newPayments[index] = Math.min(50000, payment + 100);
+                      setFlexPayments(newPayments);
+                    }}
+                    className="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 active:bg-green-700 font-bold shadow-md touch-manipulation"
+                    style={{ minHeight: '40px', minWidth: '40px' }}
+                  >
+                    ➕
+                  </button>
+                </div>
               </div>
             ))}
           </div>
